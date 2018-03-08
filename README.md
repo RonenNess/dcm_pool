@@ -128,6 +128,34 @@ The main way to iterate a pool is via the ```Iterate``` function. With a lambda,
 pool.Iterate([](MyObjectType& obj, ObjectId id) { /* do something with object */ });
 ```
 
+Or you can use a proper function:
+
+```cpp
+// iteration callback
+void update_loop(MyObjectType& obj, ObjectId id)
+{
+	// your update code here
+}
+
+// using the iteration callback:
+pool.Iterate(update_loop);
+```
+
+Or if you need a finer control, you can use ```IterateEx```:
+
+```cpp
+// iteration callback
+IterationReturnCode update_loop(MyObjectType& obj, ObjectId id, ObjectsPool<MyObjectType>& pool)
+{
+	// your update code here
+	
+	// continue to next object
+	return IterationReturnCode::ITER_CONTINUE;
+}
+
+// using the iteration callback:
+pool.IterateEx(update_loop);
+```
 
 ## How does it work
 

@@ -219,7 +219,7 @@ namespace dcm_pool
 		}
 
 		// iterate objects
-		for (size_t i = 0; i < _max_used_index_in_vector; ++i)
+		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
 		{
 			_internal::ObjectInPool<T>& obj = _objects[i];
 			if (obj.is_used())
@@ -240,7 +240,7 @@ namespace dcm_pool
 		}
 
 		// iterate objects
-		for (size_t i = 0; i < _max_used_index_in_vector; ++i)
+		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
 		{
 			_internal::ObjectInPool<T>& obj = _objects[i];
 			if (obj.is_used())
