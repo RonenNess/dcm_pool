@@ -31,18 +31,58 @@ To use it, simply get the header files from [dcm_pool/include/](https://github.c
 
 ## Usage
 
-All the examples below assume your compiler knows the dcm_pool headers folder and have the following statements:
+First lets take a look at a full, simple example:
 
 ```cpp
 #include <dcm_pool/objects_pool.h>
 using namespace dcm_pool;
+
+// a dog class - what we'll have in pool
+class Dog
+{
+public:
+
+	// what dogs do every frame
+	void Update()
+	{
+		cout << "Woof!" << endl;
+	}
+
+	// rub the dog's belly
+	void RubBelly()
+	{
+		cout << "Your happiness increased by 5%." << endl;
+	}
+};
+
+// main
+void main()
+{
+	// create the pool of dogs
+	ObjectsPool<Dog> pool;
+	
+	// create a dog and rub its belly
+	auto new_dog = pool.Alloc();
+	new_dog->RubBelly();
+	
+	// create another dog 
+	auto new_dog2 = pool.Alloc();
+	
+	// release the first dog
+	pool.Release(new_dog);
+	
+	// iterate over all dogs in pool and update them using lambda
+	pool.Iterate([](Dog& dog, ObjectId id) { return dog.Update(); });
+}
 ```
+
+Now lets dive into the details:
 
 ### Creating A Pool
 
 Creating a new pool is easy:
 
-```
+```cpp
 ObjectsPool<MyObjectType> pool;
 ```
 
@@ -50,11 +90,44 @@ Note that its best to use the object type itself, and not a reference or a point
 
 The objects pool constructor receive several optional params to help you fine-tune its behavior:
 
-```
+```cpp
 ObjectsPool(size_t max_size = 0, size_t pre_alloc = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 ```
 
 - **max_size**: If provided, will limit the pool size (throw exception if exceeding limit).
+- **pre_alloc**: If provided, will allocate this pool size upfront (translate to vector's reserve).
+- **shrink_threshold**: While the pool grows dynamically, we only shrink the pool's memory chunk when having this amount of free objects in pool.
+- **defrag_mode**: When to handle defragging - immediately on release, when trying to iterate objects, or manually.
+
+
+### Allocating & Releasing
+
+To allocate a new object from pool you need to use ```Alloc```:
+
+```cpp
+auto newobj = pool.Alloc();
+```
+
+Note that this will not invoke the object's constructor. If you want an initialize function you need to define one and call it manually.
+
+The returned value of ```Alloc``` is a pointer-like object that provide a direct access to the object in pool. Even after defragging, the pointer will not lose its reference (however, don't try to grab its actual address manually as it might change later).
+
+Note that accessing the pointer directly is not as efficient as using a regular pointer and may require a hash-table lookup if the pool was defragged.
+
+When you want to release the object, you use ```Release```:
+
+```cpp
+pool.Release(newobj);
+```
+
+### Iterating Pool
+
+The main way to iterate a pool is via the ```Iterate``` function. With a lambda, it looks like this:
+
+```cpp
+pool.Iterate([](MyObjectType& obj, ObjectId id) { /* do something with object */ });
+```
+
 
 ## How does it work
 
@@ -75,8 +148,193 @@ Note: Although possible, I didn't allocate memory upfront for the pool nor the v
 The results are below:
 
 ```
+==========================
+TEST DCM_POOL
+==========================
+
+Frame: 0
+Loops per frame: 15000
+Pool current size: 1
+Total update calls: 0
+Iterations total time: 0
+Allocations total time: 0
+Remove objects total time: 0
+Objects removed this frame: 0
+Objects added this frame: 1
+--------------------------
+Frame: 1
+Loops per frame: 15000
+Pool current size: 6950
+Total update calls: 72430695
+Iterations total time: 23.246
+Allocations total time: 0.155
+Remove objects total time: 0.159
+Objects removed this frame: 8051
+Objects added this frame: 15000
+--------------------------
+Frame: 2
+Loops per frame: 15000
+Pool current size: 6970
+Total update calls: 104489064
+Iterations total time: 33.579
+Allocations total time: 0.286
+Remove objects total time: 0.277
+Objects removed this frame: 14980
+Objects added this frame: 15000
+--------------------------
+Frame: 3
+Loops per frame: 15000
+Pool current size: 6950
+Total update calls: 104463885
+Iterations total time: 33.439
+Allocations total time: 0.406
+Remove objects total time: 0.28
+Objects removed this frame: 15020
+Objects added this frame: 15000
+--------------------------
+Frame: 4
+Loops per frame: 15000
+Pool current size: 6831
+Total update calls: 104115381
+Iterations total time: 33.994
+Allocations total time: 0.531
+Remove objects total time: 0.262
+Objects removed this frame: 15119
+Objects added this frame: 15000
+--------------------------
+
+
+==========================
+TEST LIST
+==========================
+
+Frame: 0
+Loops per frame: 15000
+Pool current size: 1
+Total update calls: 1
+Iterations total time: 0
+Allocations total time: 0
+Remove objects total time: 0
+Objects removed this frame: 0
+Objects added this frame: 1
+--------------------------
+Frame: 1
+Loops per frame: 15000
+Pool current size: 6976
+Total update calls: 72635680
+Iterations total time: 51.905
+Allocations total time: 0.023
+Remove objects total time: 36.75
+Objects removed this frame: 8025
+Objects added this frame: 15000
+--------------------------
+Frame: 2
+Loops per frame: 15000
+Pool current size: 6952
+Total update calls: 104812066
+Iterations total time: 75.659
+Allocations total time: 0.07
+Remove objects total time: 53.76
+Objects removed this frame: 15024
+Objects added this frame: 15000
+--------------------------
+Frame: 3
+Loops per frame: 15000
+Pool current size: 6935
+Total update calls: 104436172
+Iterations total time: 75.233
+Allocations total time: 0.118
+Remove objects total time: 53.833
+Objects removed this frame: 15017
+Objects added this frame: 15000
+--------------------------
+Frame: 4
+Loops per frame: 15000
+Pool current size: 6949
+Total update calls: 104269843
+Iterations total time: 73.96
+Allocations total time: 0.157
+Remove objects total time: 52.76
+Objects removed this frame: 14986
+Objects added this frame: 15000
+--------------------------
+
+
+==========================
+TEST VECTOR
+==========================
+
+Frame: 0
+Loops per frame: 15000
+Pool current size: 1
+Total update calls: 1
+Iterations total time: 0
+Allocations total time: 0
+Remove objects total time: 0
+Objects removed this frame: 0
+Objects added this frame: 1
+--------------------------
+Frame: 1
+Loops per frame: 15000
+Pool current size: 6872
+Total update calls: 71811310
+Iterations total time: 25.1
+Allocations total time: 0.019
+Remove objects total time: 12.152
+Objects removed this frame: 15735
+Objects added this frame: 15000
+--------------------------
+Frame: 2
+Loops per frame: 15000
+Pool current size: 6957
+Total update calls: 103485217
+Iterations total time: 36.328
+Allocations total time: 0.031
+Remove objects total time: 17.489
+Objects removed this frame: 29915
+Objects added this frame: 15000
+--------------------------
+Frame: 3
+Loops per frame: 15000
+Pool current size: 6972
+Total update calls: 104276134
+Iterations total time: 36.259
+Allocations total time: 0.052
+Remove objects total time: 17.383
+Objects removed this frame: 29985
+Objects added this frame: 15000
+--------------------------
+Frame: 4
+Loops per frame: 15000
+Pool current size: 6918
+Total update calls: 104338469
+Iterations total time: 36.525
+Allocations total time: 0.065
+Remove objects total time: 17.633
+Objects removed this frame: 30054
+Objects added this frame: 15000
+--------------------------
 
 ```
+
+#### Conclusion
+
+At the time of peak (eg when there were the most objects in pools), we measured the following times (all in seconds):
+
+```
+				Dcm_pool		List		Vector	
+Iterating		33.439			75.233		36.259
+Allocating		0.406			0.118		0.052
+Releasing		0.28			53.833		17.383
+Update Calls	104463885		104436172	104276134
+```
+
+
+Note: the Vector was iterated using an iterator. However, if we iterate the vector using a direct index its much faster and closer to the pool's performance.
+
+**If performance is pretty close to vector (despite in releasing) why not using a vector?**
+
+From the benchmark above you may come to the conclusion that a vector may be 'good enough', provided you don't have lots of releasing to do. However, keep in mind that you can't safely hold a pointer to an item inside a vector, since pushing / poping may change the underling addresses. The dcm_pool however, gives you vector-like performance but with faster releasing AND safe-to-use pointers to objects inside the pool.
 
 ## License
 
