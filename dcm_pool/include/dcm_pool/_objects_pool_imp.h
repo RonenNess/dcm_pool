@@ -18,7 +18,7 @@
 namespace dcm_pool
 {
 	template <typename T>
-	ObjectsPool<T>::ObjectsPool(size_t max_size, size_t pre_alloc, size_t shrink_threshold, DefragModes defrag_mode) :
+	ObjectsPool<T>::ObjectsPool(size_t max_size, size_t reserve, size_t shrink_threshold, DefragModes defrag_mode) :
 		_max_size(max_size),
 		_allocated_objects_count(0),
 		_next_object_id(0),
@@ -29,9 +29,9 @@ namespace dcm_pool
 		_holes(_objects)
 	{
 		// pre-alloc desired size
-		if (pre_alloc)
+		if (reserve)
 		{
-			_objects.reserve(pre_alloc);
+			_objects.reserve(reserve);
 		}
 	}
 
@@ -207,6 +207,12 @@ namespace dcm_pool
 		{
 			ClearUnusedMemory();
 		}
+	}
+
+	template <typename T>
+	void ObjectsPool<T>::Reserve(size_t amount)
+	{
+		_objects.reserve(amount);
 	}
 
 	template <typename T>

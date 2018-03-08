@@ -102,11 +102,11 @@ Note that its best to use the object type itself, and not a reference or a point
 The objects pool constructor receive several optional params to help you fine-tune its behavior:
 
 ```cpp
-ObjectsPool(size_t max_size = 0, size_t pre_alloc = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
+ObjectsPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 ```
 
 - **max_size**: If provided, will limit the pool size (throw exception if exceeding limit).
-- **pre_alloc**: If provided, will allocate this pool size upfront (translate to vector's reserve).
+- **reserve**: If provided, will reserve this amount of objects capacity in internal vector.
 - **shrink_threshold**: While the pool grows dynamically, we only shrink the pool's memory chunk when having this amount of free objects in pool.
 - **defrag_mode**: When to handle defragging - immediately on release, when trying to iterate objects, or manually.
 
@@ -215,6 +215,10 @@ In this mode the pool will never defrag on its own. If you iterate a pool with h
 	5. b. The pool keeps an internal hash table to convert id to actual index (hidden from the user).
 	5. c. When the pointer tries to fetch the object it points on, if the pool was defragged since last access it use the hash table to find the new objects index.
 6. To store the list of holes in the vector we reuse the free objects, so no additional memory is wasted.
+
+## Memory Consumption
+
+In addition to the objects themselves, dcm_pool adds additional unique id per object (an int) + a hash table to convert id to index.
 
 ## Performance
 

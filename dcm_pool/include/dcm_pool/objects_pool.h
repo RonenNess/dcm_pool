@@ -144,13 +144,12 @@ namespace dcm_pool
 		 * \date	2/21/2018
 		 *
 		 * \param	max_size			Maximum objects count in pool. Set to 0 for unlimited count.
-		 * \param	pre_alloc			How many objects to allocate in the pool upfront. If you exceed this number and
-		 * 								try to alloc, new memory chunk will be allocate internally (unless you exceed max_size).
+		 * \param	reserve				How many objects to reserve in the pool memory (using vector's reserve).
 		 * \param	shrink_threshold	The pool uses a vector internally to hold objects. When you allocate more objects, the vector grows.
 		 * 								This number decides when to shrink the vector down, if objects are released.
 		 * \param	defrag_mode			How to handle defragging.
 		 */
-		ObjectsPool(size_t max_size = 0, size_t pre_alloc = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
+		ObjectsPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 
 		/*!
 		 * \fn	Ptr ObjectsPool::Alloc();
@@ -188,6 +187,18 @@ namespace dcm_pool
 		* \param	id		Object to release.
 		*/
 		void Release(ObjectId id);
+
+		/*!
+		 * \fn	void ObjectsPool::Reserve(size_t amount);
+		 *
+		 * \brief	Reserves the given amount in the internal vector used to hold the pool.
+		 *
+		 * \author	Ronen
+		 * \date	3/8/2018
+		 *
+		 * \param	amount	The amount of objects to reserve.
+		 */
+		void Reserve(size_t amount);
 
 		/*!
 		 * \fn	void ObjectsPool::Iterate(pool_iterator callback);
