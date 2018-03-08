@@ -78,6 +78,17 @@ void main()
 
 Now lets dive into the details:
 
+### Limitations & Tips
+
+1. The objects you use in pool must have a default constructor.
+2. Allocating new objects will not invoke a constructor call. You need to create and call an Init() function manually.
+3. Releasing objects will not invoke a destructor call. You need to create and call a Dtor() function manually.
+4. As an extension of the constructor / destructor limitation, if you do implement them they shouldn't do any heavy lifting as they may be called internally.
+5. Implementing a Move Assignment Operator will increase performance significantly.
+6. To maximize the memory-based optimization, don't use the pool to store pointers or references. 
+
+As you can see the limitations above apply to most basic pooling solutions. Nothing too special.
+
 ### Creating A Pool
 
 Creating a new pool is easy:
@@ -157,9 +168,53 @@ IterationReturnCode update_loop(MyObjectType& obj, ObjectId id, ObjectsPool<MyOb
 pool.IterateEx(update_loop);
 ```
 
+### Cleanup
+
+The pool with shrink its used memory automatically when there are too many unused objects in pool. However, if you want to reduce the pool's size to minimum immediately, you can call:
+
+```cpp
+pool.ClearUnusedMemory();
+```
+
+Note that if the pool is not defragged (eg have holes in it) it will raise exception.
+
+### Defragging
+
+As mentioned before, the pool might have "holes" in its contiguous memory due to objects being released from the middle. To solve this, the dcm_pool do self-defragging.
+
+The defragging process worst case takes O(N), where N is number of holes in the pool and not number of objects.
+
+dcm_pool Support 3 defragging modes:
+
+#### DEFRAG_IMMEDIATE
+
+Will close the hole immediately as its created. With this mode the performance is deterministic; The moment you release an object that creates a hole, it will be closed by moving the last object in its place.
+
+#### DEFRAG_DEFERRED
+
+In this mode the pool will accumulate holes and only close them when trying to iterate the pool. The huge advantage here is that if you do something like Release -> Alloc -> Release -> Alloc, in the two times you alloc it will just return the unused objects in the middle, and no will defragging will happen.
+
+The disadvantage is that the performance of the Iteration() call becomes non-deterministic and may change depending on how many holes you have in your contiguous memory.
+
+#### DEFRAG_MANUAL
+
+In this mode the pool will never defrag on its own. If you iterate a pool with holes it will just skip the unused objects, and you'll need to call ```pool.Defrag()``` manually when you think its right.
+
+
 ## How does it work
 
-TBD
+1. The pool uses a vector internally to store the objects in memory.
+2. The vector grows and shrink as the pool changes its size.
+3. When you release an object, it creates a 'hole' in the contiguous vector memory. 
+	3. a. That hole is closed during the defragging process. 
+	3. b. We can accumulate a list of holes if defragging mode is not immediate.
+	3. c. Defragging takes O(N), where N is number of holes (not number of pool). We close holes by taking objects from the end of the vector.
+4. To iterate the vector you call Iterate(), which takes a function pointer to run on every valid object in pool.
+5. Since defragging shuffles memory, you can't access objects by index. To solve this, we use a special pointer class to allow access to specific objects:
+	5. a. Every object in pool is asigned with a unique id.
+	5. b. The pool keeps an internal hash table to convert id to actual index (hidden from the user).
+	5. c. When the pointer tries to fetch the object it points on, if the pool was defragged since last access it use the hash table to find the new objects index.
+6. To store the list of holes in the vector we reuse the free objects, so no additional memory is wasted.
 
 ## Performance
 

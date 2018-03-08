@@ -59,15 +59,20 @@ namespace dcm_pool
 	 * 				This pool help us manage those bullets pool in a smart way that iterating them is easy, and we don't really
 	 * 				allocate and release them all the time.
 	 *
-	 *			How does it work:
-	 *				1. We use a vector to store the objects internally. The vector grows and shrink as the pool size changes.
-	 *				2. Every object in vector is assigned with a unique id.
-	 *				3. An unordered map is used to convert object's unique id to their current index in vector.
-	 *				4. If we release an object from pool and creating a hole, we'll either close it when allocating a new object or when defragging.
-	 *				5. To iterate the objects you need to use a special Iterate() function with a callback you provide.
-	 *				6. To access an object directly you use a special pointer that is based on object's unique id. Usually it will store the address
-	 *					internally and accessing the object would be like using a pointer, but sometimes after defragging it will need to resolve the
-	 *					new address, which involved searching in an unordered map (this happens internally under the hood).
+	 *				How does it work:		
+	 *			1. The pool uses a vector internally to store the objects in memory.
+	 *			2. The vector grows and shrink as the pool changes its size.
+	 *			3. When you release an object, it creates a 'hole' in the contiguous vector memory. 
+	 *				3. a. That hole is closed during the defragging process. 
+	 *				3. b. We can accumulate a list of holes if defragging mode is not immediate.
+	 *				3. c. Defragging takes O(N), where N is number of holes (not number of pool). We close holes by taking objects from the end of the vector.
+	 *			4. To iterate the vector you call Iterate(), which takes a function pointer to run on every valid object in pool.
+	 *			5. Since defragging shuffles memory, you can't access objects by index. To solve this, we use a special pointer class to allow access to specific objects:
+	 *				5. a. Every object in pool is asigned with a unique id.
+	 *				5. b. The pool keeps an internal hash table to convert id to actual index (hidden from the user).
+	 *				5. c. When the pointer tries to fetch the object it points on, if the pool was defragged since last access it use the hash table to find the new objects index.
+	 *			6. To store the list of holes in the vector we reuse the free objects, so no additional memory is wasted.
+	 *
 	 *
 	 * \author	Ronen
 	 * \date	2/21/2018
