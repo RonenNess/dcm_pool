@@ -15,13 +15,13 @@ A dynamic contiguous-memory Pool, or in short a dcm_pool, is a pool of objects t
 
 This pool have very specific use cases, so best way to describe it is by example. 
 
-Lets say you're building something with an [Entity-Component-System](https://en.wikipedia.org/wiki/Entity%E2%80%93component%E2%80%93system) design pattern, which is very common with video game engines. In ECS design pattern you have a basic 'entity' object, to which you attach different 'components' that implement different features and behaviors. 
+Lets say you're building a game engine with the [Entity-Component-System](https://en.wikipedia.org/wiki/Entity%E2%80%93component%E2%80%93system) pattern, which is very common with video game engines. In ECS design you have a basic 'entity' object, to which you attach different 'components' that implement different features and behaviours. 
 
-Now you have different type of components attached to different entities, and they all require an 'Update()' call every frame. You have no way to tell how many components you'll need, and you probably want to pool your components so that repeated assigning and releasing won't cause too many new() and delete() calls. In addition, you want similar components to be in contiguous memory, to enjoy [memory access optimizations](https://bitbashing.io/memory-performance.html).
+Now you have different type of components attached to different entities, and they all require an 'Update()' call every frame. You have no way to tell how many components you'll need, and you probably want to pool your components so that repeated assigning and releasing won't cause too many memory management calls. In addition, you want similar components to be in contiguous memory, to enjoy [memory access optimizations](https://bitbashing.io/memory-performance.html).
 
-If you use a regular pool, you can easily reduce the new() and delete() calls, but your objects memory will be scattered and iterating them for the Update() loop would be less efficient. If you use a vector or other contiguous-memory container you'll enjoy a very fast iteration, but slow releasing / allocating.
+If you use a regular pool, you can easily reduce the new() and delete() calls, but your objects memory will not be contiguous and iterating them for the Update() loop would be less efficient. If you use a vector or other contiguous-memory container you'll enjoy a very fast iteration, but slow releasing / allocating (even if you use reserve - releasing might cause a shift of memory). In addition, using vector will not allow you to hold pointers or indexes to objects inside the pool, as those could change.
 
-The provided pool in this lib tries to provide something that will reduce new() / delete() calls, and also keep everything in contiguous memory. In addition, you don't have to sacrifice direct access (via pointer-like objects), although accessing via pointers would be slightly less efficient.
+This lib provides a pool to answer just that: reduce new / delete calls, keep everything in contiguous memory, and allow direct access using pointers.
 
 ## Install
 
@@ -37,7 +37,7 @@ First lets take a look at a full, simple example:
 #include <dcm_pool/objects_pool.h>
 using namespace dcm_pool;
 
-// a dog class - what we'll have in pool
+// a dog class - the objects we want to pool
 class Dog
 {
 public:
@@ -58,10 +58,10 @@ public:
 // main
 void main()
 {
-	// create the pool of dogs
+	// create a pool of dogs
 	ObjectsPool<Dog> pool;
 	
-	// create a dog and rub its belly
+	// alloc a new dog and rub its belly
 	auto new_dog = pool.Alloc();
 	new_dog->RubBelly();
 	
@@ -71,23 +71,13 @@ void main()
 	// release the first dog
 	pool.Release(new_dog);
 	
-	// iterate over all dogs in pool and update them using lambda
+	// iterate over all dogs in pool and update (using lambda)
 	pool.Iterate([](Dog& dog, ObjectId id) { return dog.Update(); });
 }
 ```
 
-Now lets dive into the details:
+Now lets dive into more details:
 
-### Limitations & Tips
-
-1. The objects you use in pool must have a default constructor.
-2. Allocating new objects will not invoke a constructor call. You need to create and call an Init() function manually.
-3. Releasing objects will not invoke a destructor call. You need to create and call a Dtor() function manually.
-4. As an extension of the constructor / destructor limitation, if you do implement them they shouldn't do any heavy lifting as they may be called internally.
-5. Implementing a Move Assignment Operator will increase performance significantly.
-6. To maximize the memory-based optimization, don't use the pool to store pointers or references. 
-
-As you can see the limitations above apply to most basic pooling solutions. Nothing too special.
 
 ### Creating A Pool
 
@@ -97,19 +87,20 @@ Creating a new pool is easy:
 ObjectsPool<MyObjectType> pool;
 ```
 
-Note that its best to use the object type itself, and not a reference or a pointer. If you use pointers you'll lose some of the memory-access performance and there's no reason for that.
+Note that its best to use the object type itself, and not a reference or a pointer. If you use pointers you'll lose some of the memory-access performance.
 
-The objects pool constructor receive several optional params to help you fine-tune its behavior:
+The objects pool constructor receive several optional params to help you fine-tune its behaviour:
 
 ```cpp
 ObjectsPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 ```
 
-- **max_size**: If provided, will limit the pool size (throw exception if exceeding limit).
+- **max_size**: If provided, will limit the pool size (throw exception if exceed limit).
 - **reserve**: If provided, will reserve this amount of objects capacity in internal vector.
 - **shrink_threshold**: While the pool grows dynamically, we only shrink the pool's memory chunk when having this amount of free objects in pool.
 - **defrag_mode**: When to handle defragging - immediately on release, when trying to iterate objects, or manually.
 
+You can understand from the params above that if you want a constant-size pool you can set `reserve` and `max_size` to the same value, and you'll have 0 new() / delete() calls.
 
 ### Allocating & Releasing
 
@@ -121,11 +112,11 @@ auto newobj = pool.Alloc();
 
 Note that this will not invoke the object's constructor. If you want an initialize function you need to define one and call it manually.
 
-The returned value of ```Alloc``` is a pointer-like object that provide a direct access to the object in pool. Even after defragging, the pointer will not lose its reference (however, don't try to grab its actual address manually as it might change later).
+The returned value of ```Alloc``` is a pointer-like object that provide a direct access to the object in pool. Even after defragging, the pointer will not lose its reference (but never try to grab the actual address of the object as it might change internally).
 
-Note that accessing the pointer directly is not as efficient as using a regular pointer and may require a hash-table lookup if the pool was defragged.
+Accessing the pointer directly is not as efficient as using a regular pointer and may require a single hash-table lookup, if the pool was defragged since you last used it.
 
-When you want to release the object, you use ```Release```:
+When you're done with the object and want to release it, use ```Release```:
 
 ```cpp
 pool.Release(newobj);
@@ -139,7 +130,9 @@ The main way to iterate a pool is via the ```Iterate``` function. With a lambda,
 pool.Iterate([](MyObjectType& obj, ObjectId id) { /* do something with object */ });
 ```
 
-Or you can use a proper function:
+Note the extra param, ObjectId. This id represent the unique, constant id of the object in pool. You can use this id to create new object pointers or release the object using id instead of pointer.
+
+If you want to use a regular function and not a lambda, the example above would look like this:
 
 ```cpp
 // iteration callback
@@ -152,7 +145,7 @@ void update_loop(MyObjectType& obj, ObjectId id)
 pool.Iterate(update_loop);
 ```
 
-Or if you need a finer control, you can use ```IterateEx```:
+Or if you need more control, you can use ```IterateEx```:
 
 ```cpp
 // iteration callback
@@ -200,6 +193,16 @@ The disadvantage is that the performance of the Iteration() call becomes non-det
 
 In this mode the pool will never defrag on its own. If you iterate a pool with holes it will just skip the unused objects, and you'll need to call ```pool.Defrag()``` manually when you think its right.
 
+## Limitations & Tips
+
+1. The objects you use in pool must have a default constructor.
+2. Allocating new objects will not invoke a constructor call. You need to create and call an Init() function manually.
+3. Releasing objects will not invoke a destructor call. You need to create and call a Dtor() function manually.
+4. As an extension of the constructor / destructor limitation, if you do implement them they shouldn't do any heavy lifting as they may be called internally.
+5. Implementing a Move Assignment Operator will increase performance significantly.
+6. To maximize the memory-based optimization, don't use the pool to store pointers or references. 
+
+As you can see the limitations above apply to most basic pooling solutions.
 
 ## How does it work
 

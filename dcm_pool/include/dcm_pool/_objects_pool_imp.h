@@ -216,7 +216,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::IterateEx(PoolIteratorCallbackEx<T> callback)
+	void ObjectsPool<T>::IterateEx(PoolIteratorEx<T> callback)
 	{
 		// if in deferred defrag mode, do it now
 		if (_defrag_mode == DEFRAG_DEFERRED)
@@ -237,7 +237,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Iterate(PoolIteratorCallback<T> callback)
+	void ObjectsPool<T>::Iterate(PoolIterator<T> callback)
 	{
 		// if in deferred defrag mode, do it now
 		if (_defrag_mode == DEFRAG_DEFERRED)
@@ -245,6 +245,35 @@ namespace dcm_pool
 			Defrag();
 		}
 
+		// iterate objects
+		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
+		{
+			_internal::ObjectInPool<T>& obj = _objects[i];
+			if (obj.is_used())
+			{
+				callback(obj.get_object(), obj.get_id());
+			}
+		}
+	}
+    
+    template <typename T>
+	void ObjectsPool<T>::IterateEx(ConstPoolIteratorEx<T> callback) const
+	{
+		// iterate objects
+		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
+		{
+			_internal::ObjectInPool<T>& obj = _objects[i];
+			if (obj.is_used())
+			{
+				if (callback(obj.get_object(), obj.get_id(), *this) == IterationReturnCode::ITER_BREAK)
+					break;
+			}
+		}
+	}
+
+	template <typename T>
+	void ObjectsPool<T>::Iterate(ConstPoolIterator<T> callback) const
+	{
 		// iterate objects
 		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
 		{

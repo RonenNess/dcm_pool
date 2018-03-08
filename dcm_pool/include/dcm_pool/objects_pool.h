@@ -201,7 +201,7 @@ namespace dcm_pool
 		void Reserve(size_t amount);
 
 		/*!
-		 * \fn	void ObjectsPool::Iterate(pool_iterator callback);
+		 * \fn	void ObjectsPool::Iterate(PoolIterator<T> callback);
 		 *
 		 * \brief	Iterates all the objects in pool.
 		 * 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -212,10 +212,10 @@ namespace dcm_pool
 		 * \param	callback	The callback to use on the objects while iterating.
 		 * 						Return false to break the iteration.
 		 */
-		void Iterate(PoolIteratorCallback<T> callback);
+		void Iterate(PoolIterator<T> callback);
 
 		/*!
-		* \fn	void ObjectsPool::Iterate(pool_iterator callback);
+		* \fn	void ObjectsPool::Iterate(PoolIteratorEx<T> callback);
 		*
 		* \brief	Iterates all the objects in pool with extended options.
 		* 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -226,8 +226,36 @@ namespace dcm_pool
 		* \param	callback	The callback to use on the objects while iterating.
 		* 						Return false to break the iteration.
 		*/
-		void IterateEx(PoolIteratorCallbackEx<T> callback);
+		void IterateEx(PoolIteratorEx<T> callback);
 
+		/*!
+		 * \fn	void ObjectsPool::Iterate(ConstPoolIterator<T> callback) const;
+		 *
+		 * \brief	Iterates all the objects in pool.
+		 * 			Note: if working in deferred defrag mode, this will trigger defrag.
+		 *
+		 * \author	Ronen
+		 * \date	2/22/2018
+		 *
+		 * \param	callback	The callback to use on the objects while iterating.
+		 * 						Return false to break the iteration.
+		 */
+		void Iterate(ConstPoolIterator<T> callback) const;
+
+		/*!
+		* \fn	void ObjectsPool::Iterate(ConstPoolIteratorEx<T> callback) const;
+		*
+		* \brief	Iterates all the objects in pool with extended options.
+		* 			Note: if working in deferred defrag mode, this will trigger defrag.
+		*
+		* \author	Ronen
+		* \date	2/22/2018
+		*
+		* \param	callback	The callback to use on the objects while iterating.
+		* 						Return false to break the iteration.
+		*/
+		void IterateEx(ConstPoolIteratorEx<T> callback) const;
+        
 		/*!
 		 * \fn	void ObjectsPool::Clear();
 		 *

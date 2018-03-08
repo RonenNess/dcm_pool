@@ -41,21 +41,37 @@ namespace dcm_pool
 	};
 
 	/*!
-	* \typedef	void(*pool_iterator)(T&)
+	* \typedef	void(*pool_iterator)(T&, ObjectId, ObjectsPool<T>&)
 	*
 	* \brief	Callback used to iterate objects pool with extended options.
 	*/
 	template <typename T>
-	using PoolIteratorCallbackEx = IterationReturnCode(*)(T&, ObjectId, ObjectsPool<T>&);
+	using PoolIteratorEx = IterationReturnCode(*)(T&, ObjectId, ObjectsPool<T>&);
 
 	/*!
-	* \typedef	void(*pool_iterator)(T&)
+	* \typedef	void(*pool_iterator)(T&, ObjectId)
 	*
 	* \brief	A simple callback used to iterate objects pool.
 	*/
 	template <typename T>
-	using PoolIteratorCallback = void(*)(T&, ObjectId);
+	using PoolIterator = void(*)(T&, ObjectId);
 
+    	/*!
+	* \typedef	void(*pool_iterator)(const T&, ObjectId, const ObjectsPool<T>&)
+	*
+	* \brief	Callback used to iterate objects pool with extended options.
+	*/
+	template <typename T>
+	using ConstPoolIteratorEx = IterationReturnCode(*)(const T&, ObjectId, const ObjectsPool<T>&);
+
+	/*!
+	* \typedef	void(*pool_iterator)(const T&, ObjectId)
+	*
+	* \brief	A simple callback used to iterate objects pool.
+	*/
+	template <typename T>
+	using ConstPoolIterator = void(*)(const T&, ObjectId);
+    
 	/*!
 	* \enum	DefragModes
 	*
