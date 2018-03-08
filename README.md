@@ -405,11 +405,11 @@ Objects added this frame: 15000
 At the time of peak (eg when there were the most objects in pools), we measured the following times (all in seconds):
 
 ```
-				Dcm_pool		List		Vector	
-Iterating		33.439			75.233		36.259
-Allocating		0.406			0.118		0.052
-Releasing		0.28			53.833		17.383
-Update Calls	104463885		104436172	104276134
+                Dcm_pool        List        Vector    
+Iterating       33.439          75.233      36.259
+Allocating      0.406           0.118       0.052
+Releasing       0.28            53.833      17.383
+Update Calls    104463885       104436172   104276134
 ```
 
 
