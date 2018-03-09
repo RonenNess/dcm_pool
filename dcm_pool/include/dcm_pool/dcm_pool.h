@@ -101,6 +101,12 @@ namespace dcm_pool
 				ObjectPtr<T>(pool, id) {}
 		};
 
+		/*! \brief	Callback to invoke on every new object you allocate. */
+		EventsHandler<T> OnAlloc = NULL;
+
+		/*! \brief	Callback to invoke on every object you release. */
+		EventsHandler<T> OnRelease = NULL;
+
 	private:
 
 		/*! \brief	The pooled objects. */

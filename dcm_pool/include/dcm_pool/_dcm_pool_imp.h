@@ -86,10 +86,15 @@ namespace dcm_pool
 		obj.set_id(id);
 		obj.set_is_used(true);
 
-		// update the pointers table and return object pointer
+		// update the pointers table and create a pointer to return
 		_pointers[id] = index;
 		auto ret = DcmPool<T>::Ptr(this, id);
 		ret._set_cached_ptr(&obj.get_object(), _defrags_count);
+
+		// if defined, call the OnAlloc event handler
+		if (OnAlloc) OnAlloc(obj.get_object(), id, *this);
+
+		// return the object
 		return ret;
 	}
 
@@ -119,6 +124,9 @@ namespace dcm_pool
 		{
 			throw AccessViolation();
 		}
+
+		// if defined, call the OnRelease event handler
+		if (OnRelease) OnRelease(obj_ref.get_object(), id, *this);
 
 		// first, remove object from pointers map
 		_pointers.erase(id);

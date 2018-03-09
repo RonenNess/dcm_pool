@@ -71,6 +71,10 @@ namespace dcm_pool
 	*/
 	template <typename T>
 	using ConstPoolIterator = void(*)(const T&, ObjectId);
+
+	/*! \brief	Callback to handle different pool events like allocating new object or releasing an object. */
+	template <typename T>
+	using EventsHandler = void(*)(T&, ObjectId, DcmPool<T>&);
     
 	/*!
 	* \enum	DefragModes

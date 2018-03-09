@@ -147,7 +147,7 @@ void update_loop(MyObjectType& obj, ObjectId id)
 pool.Iterate(update_loop);
 ```
 
-Or if you need more control, you can use ```IterateEx```:
+Or if you need more control, you can use the ```IterateEx``` version:
 
 ```cpp
 // iteration callback
@@ -162,6 +162,28 @@ IterationReturnCode update_loop(MyObjectType& obj, ObjectId id, DcmPool<MyObject
 // using the iteration callback:
 pool.IterateEx(update_loop);
 ```
+
+Note that for const pools you have a corresponding iteration function that receive a similar signature but with const references.
+
+### Handling Init / Terminate Automatically
+
+As mentioned before, calling ```Alloc``` and ```Release``` does not guarantee corresponding constructor / destructor calls. So you can't count on ctor / dtor with your objects.
+
+However, dcm_pool provide a simple way to automatically invoke a custom Init / Terminate function whenever you ```Alloc``` or ```Release``` an object:
+
+```cpp
+// call obj.Init() whenever a new object is allocated
+pool.OnAlloc = [](MyObjectType& obj, ObjectId id, DcmPool<MyObjectType>& pool) {
+	obj.Init();
+};
+
+// call obj.Release() whenever an object is being released
+pool.OnRelease = [](MyObjectType& obj, ObjectId id, DcmPool<MyObjectType>& pool) {
+	obj.Release();
+};
+```
+
+Just like you would normally avoid raising exceptions from a normal constructor / destructor, you should avoid raising exceptions from your Init / Terminate as well, as it could cause undefined behavior with the pool.
 
 ### Cleanup
 
