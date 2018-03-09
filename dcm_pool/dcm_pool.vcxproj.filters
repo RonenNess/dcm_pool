@@ -27,9 +27,6 @@
     <ClInclude Include="include\dcm_pool\_object_ptr_imp.h">
       <Filter>Header Files\dcm_pool</Filter>
     </ClInclude>
-    <ClInclude Include="include\dcm_pool\_objects_pool_imp.h">
-      <Filter>Header Files\dcm_pool</Filter>
-    </ClInclude>
     <ClInclude Include="include\dcm_pool\defs.h">
       <Filter>Header Files\dcm_pool</Filter>
     </ClInclude>
@@ -42,13 +39,16 @@
     <ClInclude Include="include\dcm_pool\object_ptr.h">
       <Filter>Header Files\dcm_pool</Filter>
     </ClInclude>
-    <ClInclude Include="include\dcm_pool\objects_pool.h">
-      <Filter>Header Files\dcm_pool</Filter>
-    </ClInclude>
     <ClInclude Include="include\dcm_pool\holes_list.h">
       <Filter>Header Files\dcm_pool</Filter>
     </ClInclude>
     <ClInclude Include="include\dcm_pool\_holes_list_imp.h">
+      <Filter>Header Files\dcm_pool</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dcm_pool\dcm_pool.h">
+      <Filter>Header Files\dcm_pool</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dcm_pool\_dcm_pool_imp.h">
       <Filter>Header Files\dcm_pool</Filter>
     </ClInclude>
   </ItemGroup>

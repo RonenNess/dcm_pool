@@ -36,7 +36,7 @@ namespace dcm_pool
 	private:
 
 		/*! \brief	The pool containing this object. */
-		ObjectsPool<T>* _pool;
+		DcmPool<T>* _pool;
 
 		/*! \brief	The object's unique id. */
 		ObjectId _id;
@@ -60,7 +60,7 @@ namespace dcm_pool
 		 * \param	pool	The parent objects pool.
 		 * \param	id		Object's unique id in pool.
 		 */
-		ObjectPtr(ObjectsPool<T>* pool = NULL, ObjectId id = ObjectPoolMaxIndex);
+		ObjectPtr(DcmPool<T>* pool = NULL, ObjectId id = ObjectPoolMaxIndex);
 
 		/*!
 		 * \fn	inline ObjectId ObjectPtr::_get_id() const;

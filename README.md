@@ -34,7 +34,7 @@ To use it, simply get the header files from [dcm_pool/include/](https://github.c
 First lets take a look at a full, simple example:
 
 ```cpp
-#include <dcm_pool/objects_pool.h>
+#include <dcm_pool/dcm_pool.h>
 using namespace dcm_pool;
 
 // a dog class - the objects we want to pool
@@ -59,7 +59,7 @@ public:
 void main()
 {
 	// create a pool of dogs
-	ObjectsPool<Dog> pool;
+	DcmPool<Dog> pool;
 	
 	// alloc a new dog and rub its belly
 	auto new_dog = pool.Alloc();
@@ -72,7 +72,7 @@ void main()
 	pool.Release(new_dog);
 	
 	// iterate over all dogs in pool and update (using lambda)
-	pool.Iterate([](Dog& dog, ObjectId id) { return dog.Update(); });
+	pool.Iterate([](Dog& dog, ObjectId id) { dog.Update(); });
 }
 ```
 
@@ -84,7 +84,7 @@ Now lets dive into more details:
 Creating a new pool is easy:
 
 ```cpp
-ObjectsPool<MyObjectType> pool;
+DcmPool<MyObjectType> pool;
 ```
 
 Note that its best to use the object type itself, and not a reference or a pointer. If you use pointers you'll lose some of the memory-access performance.
@@ -92,7 +92,7 @@ Note that its best to use the object type itself, and not a reference or a point
 The objects pool constructor receive several optional params to help you fine-tune its behaviour:
 
 ```cpp
-ObjectsPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
+DcmPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 ```
 
 - **max_size**: If provided, will limit the pool size (throw exception if exceed limit).
@@ -122,6 +122,8 @@ When you're done with the object and want to release it, use ```Release```:
 pool.Release(newobj);
 ```
 
+Similar to with ```Alloc```, this will not call the object destructor.
+
 ### Iterating Pool
 
 The main way to iterate a pool is via the ```Iterate``` function. With a lambda, it looks like this:
@@ -149,7 +151,7 @@ Or if you need more control, you can use ```IterateEx```:
 
 ```cpp
 // iteration callback
-IterationReturnCode update_loop(MyObjectType& obj, ObjectId id, ObjectsPool<MyObjectType>& pool)
+IterationReturnCode update_loop(MyObjectType& obj, ObjectId id, DcmPool<MyObjectType>& pool)
 {
 	// your update code here
 	
@@ -163,7 +165,8 @@ pool.IterateEx(update_loop);
 
 ### Cleanup
 
-The pool with shrink its used memory automatically when there are too many unused objects in pool. However, if you want to reduce the pool's size to minimum immediately, you can call:
+The pool will shrink its memory chunk automatically when there are too many unused objects in pool. 
+However, if you want to reduce the pool's size immediately, you can call:
 
 ```cpp
 pool.ClearUnusedMemory();

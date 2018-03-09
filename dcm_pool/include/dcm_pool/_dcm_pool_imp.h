@@ -1,14 +1,13 @@
 /*!
 * \file	include\dcm_pool\_object_pool_imp.h.
 *
-* \brief		Implement the ObjectsPool template class.
+* \brief		Implement the DcmPool template class.
 * \license		MIT
 * \autor		Ronen Ness.
 * \since		2018
 */
 
 #include "exceptions.h"
-#include "objects_pool.h"
 
 
 #ifndef __OBJECT_POOL_IMP__
@@ -18,7 +17,7 @@
 namespace dcm_pool
 {
 	template <typename T>
-	ObjectsPool<T>::ObjectsPool(size_t max_size, size_t reserve, size_t shrink_threshold, DefragModes defrag_mode) :
+	DcmPool<T>::DcmPool(size_t max_size, size_t reserve, size_t shrink_threshold, DefragModes defrag_mode) :
 		_max_size(max_size),
 		_allocated_objects_count(0),
 		_next_object_id(0),
@@ -36,7 +35,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	typename ObjectsPool<T>::Ptr ObjectsPool<T>::Alloc()
+	typename DcmPool<T>::Ptr DcmPool<T>::Alloc()
 	{
 		// make sure didn't exceed pool limit
 		if (_max_size && _allocated_objects_count >= _max_size)
@@ -70,7 +69,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	typename ObjectsPool<T>::Ptr ObjectsPool<T>::ObjectsPool<T>::AssignObject(size_t index)
+	typename DcmPool<T>::Ptr DcmPool<T>::DcmPool<T>::AssignObject(size_t index)
 	{
 		// increase allocated objects count
 		_allocated_objects_count++;
@@ -89,13 +88,13 @@ namespace dcm_pool
 
 		// update the pointers table and return object pointer
 		_pointers[id] = index;
-		auto ret = ObjectsPool<T>::Ptr(this, id);
+		auto ret = DcmPool<T>::Ptr(this, id);
 		ret._set_cached_ptr(&obj.get_object(), _defrags_count);
 		return ret;
 	}
 
 	template <typename T>
-	T& ObjectsPool<T>::_get_object(ObjectId id)
+	T& DcmPool<T>::_get_object(ObjectId id)
 	{
 		size_t index = _pointers.at(id);
 		_internal::ObjectInPool<T>& obj = *(&_objects[index]);
@@ -103,13 +102,13 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Release(typename ObjectsPool<T>::Ptr obj)
+	void DcmPool<T>::Release(typename DcmPool<T>::Ptr obj)
 	{
 		Release(obj._get_id());
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Release(ObjectId id)
+	void DcmPool<T>::Release(ObjectId id)
 	{
 		// get object index in pool and a reference to the object itself
 		auto index = _pointers[id];
@@ -148,13 +147,13 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	size_t ObjectsPool<T>::size() const
+	size_t DcmPool<T>::size() const
 	{
 		return _allocated_objects_count;
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Clear()
+	void DcmPool<T>::Clear()
 	{
 		_pointers.clear();
 		_objects.clear();
@@ -165,7 +164,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Defrag()
+	void DcmPool<T>::Defrag()
 	{
 		// no holes to fill? nothing to do here
 		if (!_holes.size())
@@ -210,13 +209,13 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Reserve(size_t amount)
+	void DcmPool<T>::Reserve(size_t amount)
 	{
 		_objects.reserve(amount);
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::IterateEx(PoolIteratorEx<T> callback)
+	void DcmPool<T>::IterateEx(PoolIteratorEx<T> callback)
 	{
 		// if in deferred defrag mode, do it now
 		if (_defrag_mode == DEFRAG_DEFERRED)
@@ -237,7 +236,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Iterate(PoolIterator<T> callback)
+	void DcmPool<T>::Iterate(PoolIterator<T> callback)
 	{
 		// if in deferred defrag mode, do it now
 		if (_defrag_mode == DEFRAG_DEFERRED)
@@ -257,7 +256,7 @@ namespace dcm_pool
 	}
     
     template <typename T>
-	void ObjectsPool<T>::IterateEx(ConstPoolIteratorEx<T> callback) const
+	void DcmPool<T>::IterateEx(ConstPoolIteratorEx<T> callback) const
 	{
 		// iterate objects
 		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
@@ -272,7 +271,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::Iterate(ConstPoolIterator<T> callback) const
+	void DcmPool<T>::Iterate(ConstPoolIterator<T> callback) const
 	{
 		// iterate objects
 		for (size_t i = 0; i <= _max_used_index_in_vector; ++i)
@@ -286,7 +285,7 @@ namespace dcm_pool
 	}
 
 	template <typename T>
-	void ObjectsPool<T>::ClearUnusedMemory()
+	void DcmPool<T>::ClearUnusedMemory()
 	{
 		// make sure there are not holes
 		if (_holes.size())

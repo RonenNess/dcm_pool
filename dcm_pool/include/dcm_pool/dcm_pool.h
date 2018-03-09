@@ -1,7 +1,7 @@
 /*!
 * \file	include\dcm_pool\objects_pool.h.
 *
-* \brief		Define the main ObjectsPool template class.
+* \brief		Define the main DcmPool template class.
 * \license		MIT
 * \autor		Ronen Ness.
 * \since		2018
@@ -21,7 +21,7 @@ using namespace std;
 namespace dcm_pool
 {
 	/*!
-	 * \class	ObjectsPool
+	 * \class	DcmPool
 	 *
 	 * \brief	Dynamic, Contiguous-Memory objects pool.
 	 * 			This object allows you to quickly allocate and release objects from a dynamic pool, without unnecessary new/release calls.
@@ -33,7 +33,7 @@ namespace dcm_pool
 	 *				- Contiguous: will hold all objects in a contiguous memory block, and defrag when needed.
 	 *
 	 * 			Notes:
-	 * 				- To access an object from the pool externally (eg not via iteration) you need to use the ObjectsPool<T>::Ptr object.
+	 * 				- To access an object from the pool externally (eg not via iteration) you need to use the DcmPool<T>::Ptr object.
 	 * 				- The pool use the move assignment operator internally, so implementing it will boost performance greatly.
 	 * 				- Your objects (T) must have a default constructor, and obviously an Init() function you'll need to call manually after allocating.
 	 * 				- The pool is not thread safe!
@@ -82,7 +82,7 @@ namespace dcm_pool
 	 * 				provide an actual type and not a pointer.
 	 */
 	template <typename T>
-	class ObjectsPool
+	class DcmPool
 	{
 	public:
 
@@ -97,7 +97,7 @@ namespace dcm_pool
 		class Ptr : public ObjectPtr<T>
 		{
 		public:
-			Ptr(ObjectsPool<T>* pool = NULL, ObjectId id = ObjectPoolMaxIndex) :
+			Ptr(DcmPool<T>* pool = NULL, ObjectId id = ObjectPoolMaxIndex) :
 				ObjectPtr<T>(pool, id) {}
 		};
 
@@ -136,7 +136,7 @@ namespace dcm_pool
 	public:
 
 		/*!
-		 * \fn	ObjectsPool::ObjectsPool(std::size_t max_size);
+		 * \fn	DcmPool::DcmPool(std::size_t max_size);
 		 *
 		 * \brief	Constructor
 		 *
@@ -149,10 +149,10 @@ namespace dcm_pool
 		 * 								This number decides when to shrink the vector down, if objects are released.
 		 * \param	defrag_mode			How to handle defragging.
 		 */
-		ObjectsPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
+		DcmPool(size_t max_size = 0, size_t reserve = 0, size_t shrink_threshold = 1024, DefragModes defrag_mode = DEFRAG_DEFERRED);
 
 		/*!
-		 * \fn	Ptr ObjectsPool::Alloc();
+		 * \fn	Ptr DcmPool::Alloc();
 		 *
 		 * \brief	Allocate an object from the pool.
 		 *
@@ -165,7 +165,7 @@ namespace dcm_pool
 		Ptr Alloc();
 
 		/*!
-		 * \fn	void ObjectsPool::Release(ObjectPtr<T> obj);
+		 * \fn	void DcmPool::Release(ObjectPtr<T> obj);
 		 *
 		 * \brief	Releases the given object and return it to the pool.
 		 *
@@ -177,7 +177,7 @@ namespace dcm_pool
 		void Release(Ptr obj);
 
 		/*!
-		* \fn	void ObjectsPool::Release(ObjectId id);
+		* \fn	void DcmPool::Release(ObjectId id);
 		*
 		* \brief	Releases the given object and return it to the pool.
 		*
@@ -189,7 +189,7 @@ namespace dcm_pool
 		void Release(ObjectId id);
 
 		/*!
-		 * \fn	void ObjectsPool::Reserve(size_t amount);
+		 * \fn	void DcmPool::Reserve(size_t amount);
 		 *
 		 * \brief	Reserves the given amount in the internal vector used to hold the pool.
 		 *
@@ -201,7 +201,7 @@ namespace dcm_pool
 		void Reserve(size_t amount);
 
 		/*!
-		 * \fn	void ObjectsPool::Iterate(PoolIterator<T> callback);
+		 * \fn	void DcmPool::Iterate(PoolIterator<T> callback);
 		 *
 		 * \brief	Iterates all the objects in pool.
 		 * 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -215,7 +215,7 @@ namespace dcm_pool
 		void Iterate(PoolIterator<T> callback);
 
 		/*!
-		* \fn	void ObjectsPool::Iterate(PoolIteratorEx<T> callback);
+		* \fn	void DcmPool::Iterate(PoolIteratorEx<T> callback);
 		*
 		* \brief	Iterates all the objects in pool with extended options.
 		* 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -229,7 +229,7 @@ namespace dcm_pool
 		void IterateEx(PoolIteratorEx<T> callback);
 
 		/*!
-		 * \fn	void ObjectsPool::Iterate(ConstPoolIterator<T> callback) const;
+		 * \fn	void DcmPool::Iterate(ConstPoolIterator<T> callback) const;
 		 *
 		 * \brief	Iterates all the objects in pool.
 		 * 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -243,7 +243,7 @@ namespace dcm_pool
 		void Iterate(ConstPoolIterator<T> callback) const;
 
 		/*!
-		* \fn	void ObjectsPool::Iterate(ConstPoolIteratorEx<T> callback) const;
+		* \fn	void DcmPool::Iterate(ConstPoolIteratorEx<T> callback) const;
 		*
 		* \brief	Iterates all the objects in pool with extended options.
 		* 			Note: if working in deferred defrag mode, this will trigger defrag.
@@ -257,7 +257,7 @@ namespace dcm_pool
 		void IterateEx(ConstPoolIteratorEx<T> callback) const;
         
 		/*!
-		 * \fn	void ObjectsPool::Clear();
+		 * \fn	void DcmPool::Clear();
 		 *
 		 * \brief	Clears the entire pool, making all objects in it free.
 		 * 			Watch out, don't use this if you still hold pointer to objects from outside.
@@ -268,7 +268,7 @@ namespace dcm_pool
 		void Clear();
 
 		/*!
-		 * \fn	inline size_t ObjectsPool::get_size() const;
+		 * \fn	inline size_t DcmPool::get_size() const;
 		 *
 		 * \brief	Gets the size of the pool, eg allocated objects count.
 		 *
@@ -280,7 +280,7 @@ namespace dcm_pool
 		inline size_t size() const;
 
 		/*!
-		 * \fn	T ObjectsPool::_get_object(ObjectId id);
+		 * \fn	T DcmPool::_get_object(ObjectId id);
 		 *
 		 * \brief	Gets an object from id.
 		 *
@@ -294,7 +294,7 @@ namespace dcm_pool
 		T& _get_object(ObjectId id);
 
 		/*!
-		 * \fn	void ObjectsPool::ClearUnusedMemory();
+		 * \fn	void DcmPool::ClearUnusedMemory();
 		 *
 		 * \brief	Force the pool to clear unused memory now.
 		 * 			This process happens automatically as you release objects, based on shrink_threshold.
@@ -305,7 +305,7 @@ namespace dcm_pool
 		void ClearUnusedMemory();
 
 		/*!
-		* \fn	void ObjectsPool::Defrag();
+		* \fn	void DcmPool::Defrag();
 		*
 		* \brief	Defrags the pool to make the memory continuous.
 		*
@@ -315,7 +315,7 @@ namespace dcm_pool
 		void Defrag();
 
 		/*!
-		 * \fn	inline unsigned int ObjectsPool::_get_defrags_count() const
+		 * \fn	inline unsigned int DcmPool::_get_defrags_count() const
 		 *
 		 * \brief	Gets defrags count.
 		 *
@@ -329,7 +329,7 @@ namespace dcm_pool
 	private:
 
 		/*!
-		 * \fn	Ptr ObjectsPool<T>::AssignObject(size_t index);
+		 * \fn	Ptr DcmPool<T>::AssignObject(size_t index);
 		 *
 		 * \brief	Assign an object in the pool (internally) and return its object pointer.
 		 *
@@ -346,4 +346,4 @@ namespace dcm_pool
 }
 
 // include implementation
-#include "_objects_pool_imp.h"
+#include "_dcm_pool_imp.h"

@@ -22,7 +22,7 @@ namespace dcm_pool
 	namespace _internal
 	{
 		/*!
-		* \class	ObjectsPool
+		* \class	DcmPool
 		*
 		* \brief	An internal object used to hold a vector of holes in a pool, without wasting any additional memory.
 		* 			This list makes use of the objects-in-pool header of the already free objects.

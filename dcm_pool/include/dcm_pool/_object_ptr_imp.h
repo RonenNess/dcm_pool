@@ -11,12 +11,12 @@
 
 #ifndef __OBJECT_PTR_IMP__
 #define __OBJECT_PTR_IMP__
-#include "objects_pool.h"
+#include "dcm_pool.h"
 
 namespace dcm_pool
 {
 	template <typename T>
-	ObjectPtr<T>::ObjectPtr(ObjectsPool<T>* pool, ObjectId id) : 
+	ObjectPtr<T>::ObjectPtr(DcmPool<T>* pool, ObjectId id) : 
 		_pool(pool), 
 		_id(id),
 		_pool_defrag_version(-1)

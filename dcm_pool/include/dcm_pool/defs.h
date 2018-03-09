@@ -17,7 +17,7 @@ namespace dcm_pool
 {
 	// predeclare objects pool
 	template <typename T>
-	class ObjectsPool;
+	class DcmPool;
 
 	/*! \brief	Invalid index / max object id. */
 	const size_t ObjectPoolMaxIndex = std::numeric_limits<std::size_t>::max();
@@ -41,12 +41,12 @@ namespace dcm_pool
 	};
 
 	/*!
-	* \typedef	void(*pool_iterator)(T&, ObjectId, ObjectsPool<T>&)
+	* \typedef	void(*pool_iterator)(T&, ObjectId, DcmPool<T>&)
 	*
 	* \brief	Callback used to iterate objects pool with extended options.
 	*/
 	template <typename T>
-	using PoolIteratorEx = IterationReturnCode(*)(T&, ObjectId, ObjectsPool<T>&);
+	using PoolIteratorEx = IterationReturnCode(*)(T&, ObjectId, DcmPool<T>&);
 
 	/*!
 	* \typedef	void(*pool_iterator)(T&, ObjectId)
@@ -57,12 +57,12 @@ namespace dcm_pool
 	using PoolIterator = void(*)(T&, ObjectId);
 
     	/*!
-	* \typedef	void(*pool_iterator)(const T&, ObjectId, const ObjectsPool<T>&)
+	* \typedef	void(*pool_iterator)(const T&, ObjectId, const DcmPool<T>&)
 	*
 	* \brief	Callback used to iterate objects pool with extended options.
 	*/
 	template <typename T>
-	using ConstPoolIteratorEx = IterationReturnCode(*)(const T&, ObjectId, const ObjectsPool<T>&);
+	using ConstPoolIteratorEx = IterationReturnCode(*)(const T&, ObjectId, const DcmPool<T>&);
 
 	/*!
 	* \typedef	void(*pool_iterator)(const T&, ObjectId)
